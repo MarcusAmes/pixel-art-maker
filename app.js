@@ -3,23 +3,35 @@ const footer = document.querySelector('footer')
 const radio = document.querySelectorAll('.b')
 const brush = document.querySelector('.brush')
 const grid = document.querySelector('.grid')
+const gridSize = document.querySelector('.grid-size')
+const reset = document.querySelector('.reset')
 var inputColor = null;
+var gridLxW = 50;
+var pixel;
+var row;
 
-
-createPixels();
+createPixels(gridLxW);
 createPallete();
 
-const pixel = document.querySelectorAll('.pixel')
 
 let selectedColor = "red";
 
 
-function changeColor(pixel) {
-  if (pixel.shiftKey === true) {
+function changeColor(e) {
+  if (e.shiftKey === true) {
     return
   }
-  if (pixel.target.classList.contains('pixel'))
-    pixel.target.style.backgroundColor = (selectedColor);
+  if (e.target.classList.contains('pixel'))
+    e.target.style.backgroundColor = (selectedColor);
+}
+
+function replaceColor(e) {
+  let tempColor = e.target.style.backgroundColor;
+  for(let i = 0; i < pixel.length; i++) {
+    if(pixel[i].style.backgroundColor === tempColor) {
+      pixel[i].style.backgroundColor = selectedColor;
+    }
+  }
 }
 
 function highlight(div) {
@@ -29,7 +41,11 @@ function highlight(div) {
   }
   if (div.tagName !== 'footer') {
     div.classList.add('highlight');
-    selectedColor = div.style.backgroundColor
+    if (div.value) {
+      selectedColor = div.value
+    } else {
+      selectedColor = div.style.backgroundColor
+    }
   }
 }
 
@@ -43,16 +59,6 @@ function select(div) {
   }
 }
 
-function use(div) {
-  let selected = document.querySelectorAll('.used')
-  for (let i = 0; i < selected.length; i++) {
-    selected[i].classList.remove('used')
-  }
-  if (div.tagName !== 'footer') {
-    div.classList.add('used');
-  }
-}
-
 function changePalleteColor(e) {
   lastPallete.style.backgroundColor = e.target.value;
 }
@@ -60,40 +66,40 @@ function changePalleteColor(e) {
 container.addEventListener('mouseover', function(e) {
   let radioValue = '';
   for (let i = 0; i < radio.length; i++) {
-    if (radio[i].innerText === 'Brush' && radio[i].classList.contains('selected')) {
+    if (radio[i].classList.contains('selected')) {
       radioValue = radio[i].innerText
     }
   }
   if(radioValue === 'Brush') {
-    let target = e;
-    changeColor(target);
+    changeColor(e);
   }
 })
 
 container.addEventListener('click', function(e) {
   let radioValue = '';
   for (let i = 0; i < radio.length; i++) {
-    if (radio[i].innerText === 'Individual' && radio[i].classList.contains('selected')) {
+    if (radio[i].classList.contains('selected')) {
       radioValue = radio[i].innerText
     }
   }
   if(radioValue === 'Individual') {
-    let target = e;
-    changeColor(target);
+    changeColor(e);
   }
+  if(radioValue === 'Replace') {
+    replaceColor(e);
+  }
+
 })
 
 footer.addEventListener('click', function(e) {
-  if (e.target.tagName !== 'INPUT') {
+  if (e.target.tagName !== 'FOOTER') {
     let target = e.target;
     highlight(target);
   }
 })
 
-inputColor.addEventListener('keydown', function(e) {
-  if(e.key === 'Enter') {
-    changePalleteColor(e)
-  }
+inputColor.addEventListener('change', function(e) {
+  highlight(e.target)
 })
 
 brush.addEventListener('click', function(e) {
@@ -104,48 +110,54 @@ brush.addEventListener('click', function(e) {
 })
 
 grid.addEventListener('click', function(e) {
-  if (e.target.classList.contains('b')) {
-    let target = e.target;
-    use(target);
-    for (let i = 0; i < pixel.length; i++) {
-      // if (e.target.innerText === "Grid")
-      //   pixel[i].classList.add('border')
-      // else
-      //   pixel[i].classList.remove('border')
+  for (let i = 0; i < pixel.length; i++) {
       pixel[i].classList.toggle('border')
+  }
+})
+
+gridSize.addEventListener('click', function(e) {
+  var size = prompt("What grid size would you like between 2 and 100", '50');
+  if (size >= 2 && size <= 100) {
+    for(let i = 0; i < row.length; i++) {
+      row[i].parentNode.removeChild(row[i]);
     }
-}
+    createPixels(size)
+  } else {
+    alert('Invalid selection')
+  }
+})
+
+reset.addEventListener('click', function(e) {
+  for(let i = 0; i < pixel.length; i++) {
+    pixel[i].style.backgroundColor = 'white'
+  }
 })
 
 
-function createPixels() {
-  for(let i = 0; i < 50; i++){
+function createPixels(grid) {
+  for(let i = 0; i < grid; i++){
     let row = document.createElement('div');
-    row.style.height = '2%'
-    row.style.width = '100%'
-    row.style.display = 'flex'
-    for(let j = 0; j < 50; j++) {
+    row.classList.add('row')
+    row.style.height = `${100 / grid}%`
+    for(let j = 0; j < grid; j++) {
       let col = document.createElement('div');
-      col.style.height = ("100%")
-      col.style.width = ("100%")
       col.classList.add('border')
       col.classList.add('pixel')
       row.appendChild(col)
     }
     container.appendChild(row)
   }
+
+  pixel = document.querySelectorAll('.pixel')
+  row = document.querySelectorAll('.row')
 }
 
 function createPallete() {
-  let colors = ['red', 'orange', 'yellow', 'green', 'blue', 'indigo', 'violet', 'black', 'black']
+  let colors = ['red', 'orange', 'yellow', 'green', 'blue', 'indigo', 'violet', 'black', 'white']
   let col;
   for(let i = 0; i < colors.length; i++) {
     col = document.createElement('div');
-    col.style.height = ("50px")
-    col.style.width = ("50px")
     col.style.backgroundColor = colors[i];
-    col.style.borderRadius = ("50%")
-    col.style.border = "1px solid black"
     col.classList.add('palette')
     if(colors[i] === 'red')
       col.classList.add('highlight')
